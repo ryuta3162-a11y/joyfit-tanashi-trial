@@ -1,219 +1,492 @@
-/**
- * ===============================================================
- * 設定項目 (田無店のスタッフ様が編集する箇所です)
- * ===============================================================
- */
-
-// 1. 回答を記録するスプレッドシートのIDを設定してください
-// ※URLの「/d/」から「/edit」までの間の英数字です
-const SPREADSHEET_ID = '1dJu7TksEe_QSv-bQ3AnTFxi9CjFt9sy9jY5JjX00UOg'; 
-
-// 2. 申請があった場合に通知を受け取りたいメールアドレスを設定してください
-const ADMIN_EMAILS = [
-  'r-kusaka@okamoto-group.co.jp',
-];
-
-// 3. 店舗の公式メールアドレス（お客様への自動返信メールの送信元・返信先となります）
-const STORE_EMAIL = 'tanashi@example.com'; // ★実際の田無店のアドレスに変更してください
-
-// 4. お客様への自動返信メールの送信者名として表示される店舗名
-const STUDIO_NAME = 'JOYFIT24田無店';
-
-// 5. シート名の定義（スプレッドシートのタブ名と【完全に一致】させてください）
-// ※「シート1」の場合はそのままで大丈夫です
-const SHEET_NAME_TRIAL = 'シート1'; 
-
-
-/**
- * ===============================================================
- * 以下はシステムの動作に必要なため、基本的に編集しないでください
- * ===============================================================
- */
-
-/**
- * doPost: メイン処理
- * あらゆるエラーをキャッチして、必ずJSONを返すように設計
- */
-function doPost(e) {
-  try {
-    // 応答速度向上のため、ロックを取得（同時実行による衝突防止）
-    const lock = LockService.getScriptLock();
-    // 5秒待ってロック取れなければエラーにする
-    if (!lock.tryLock(5000)) {
-      return createErrorResponse('サーバーが混み合っています。もう一度お試しください。');
-    }
-
-    if (!SPREADSHEET_ID) throw new Error('スプレッドシートID未設定');
-    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
-    const params = e.parameter;
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOYFIT24田無店女性会員様限定スタジオレッスン体験</title>
     
-    let response;
-
-    // --- フォーム送信の処理 ---
-    if (params.formType === 'tanashi_trial_lesson') {
-       response = handleTrialSubmit(spreadsheet, params);
-    } else {
-       response = createErrorResponse('不明なフォームタイプです。');
-    }
-
-    // 処理が終わったらロック解除
-    lock.releaseLock();
-    return response;
-
-  } catch (error) {
-    console.error('Fatal Error in doPost:', error);
-    return createErrorResponse('システムエラーが発生しました: ' + String(error.message));
-  }
-}
-
-/**
- * 体験フォーム送信のハンドリング
- */
-function handleTrialSubmit(spreadsheet, params) {
-  let sheet = spreadsheet.getSheetByName(SHEET_NAME_TRIAL);
-  if (!sheet) {
-    // シートが見つからない場合は1番左のシートを使う
-    sheet = spreadsheet.getSheets()[0];
-  }
-  
-  // スプレッドシートに記録する順番にデータを配列化
-  // ※スプレッドシートの1行目の見出しの順番と合わせています
-  const rowData = [
-    new Date(), // 1. タイムスタンプ
-    params.email || '', // 2. メールアドレス
-    params.lesson_datetime || '', // 3. 体験希望日
-    params.participants || '', // 4. 参加人数
-    params.visit_count || '', // 5. 何回目の利用か
-    params.name || '', // 6. 氏名
-    params.furigana || '', // 7. ふりがな
-    params.birthdate || '', // 8. 生年月日
-    params.age || '', // 9. 年齢
-    params.住所 || '', // 10. 住所
-    params.phone || '', // 11. 電話番号
-    params.emergency_name || '', // 12. 緊急連絡先_氏名
-    params.emergency_phone || '', // 13. 緊急連絡先_電話番号
-    params.remarks || '', // 14. ご質問・備考
-    params.consent || '', // 15. 同意確認
-    params.read_confirmation || '' // 16. 注意事項確認
-  ];
-
-  // スプレッドシートの最終行に追加
-  sheet.appendRow(rowData);
-
-  // 通知メール・自動返信メールの送信
-  try {
-    const adminInfo = `氏名: ${params.name}\n希望日: ${params.lesson_datetime}\n利用回数: ${params.visit_count}\n人数: ${params.participants}`;
-    sendNotificationEmailToStaff('女性会員様限定スタジオレッスン体験', spreadsheet.getUrl(), adminInfo);
-    sendConfirmationEmailToCustomer(params);
-  } catch(e) {
-    console.error('メール送信失敗:', e);
-  }
-
-  return createSuccessResponse({ message: '送信完了' });
-}
-
-// レスポンス生成ヘルパー
-function createSuccessResponse(data) {
-  const output = { result: 'success', ...data };
-  return ContentService.createTextOutput(JSON.stringify(output)).setMimeType(ContentService.MimeType.JSON);
-}
-
-function createErrorResponse(message) {
-  return ContentService.createTextOutput(JSON.stringify({
-    result: 'error',
-    message: message
-  })).setMimeType(ContentService.MimeType.JSON);
-}
-
-// --- メール送信関連 ---
-
-function sendNotificationEmailToStaff(formName, spreadsheetUrl, additionalInfo = '') {
-  if (ADMIN_EMAILS.length === 0) return;
-  try {
-    const subject = `【${STUDIO_NAME}】${formName}の申込が来ました`;
-    let body = `${formName}に新しい申し込みがありました。\n\n`;
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     
-    if (additionalInfo) {
-      body += additionalInfo + '\n\n';
-    }
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #f0fdfa; /* teal-50 */
+        }
+        .brand-teal { color: #008374; }
+        .bg-brand-teal { background-color: #008374; }
+        .hover\:bg-brand-teal-dark:hover { background-color: #006a5f; }
+        
+        /* カスタムスタイル */
+        .card {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            overflow: hidden;
+        }
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.05);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #008374;
+            box-shadow: 0 0 0 3px rgba(0, 131, 116, 0.2);
+        }
+        .form-input:disabled, .form-input[readonly] {
+            background-color: #f3f4f6;
+            cursor: not-allowed;
+        }
+        .required-mark {
+            color: #ef4444;
+            margin-left: 0.25rem;
+        }
+        .info-box {
+            background-color: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 0.25rem;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="min-h-screen container mx-auto p-4 sm:p-6 md:p-8">
+        
+        <div class="max-w-2xl mx-auto mt-4 sm:mt-8">
+            <section class="card">
+                <div class="p-8 sm:p-12">
+                    <header class="text-center mb-10">
+                        <h1 class="text-2xl sm:text-3xl font-bold brand-teal leading-tight">
+                            JOYFIT24田無店<br class="sm:hidden">女性会員様限定<br>スタジオレッスン体験
+                        </h1>
+                    </header>
+
+                    <div class="text-gray-700 text-sm space-y-5">
+                        <!-- ▼ 追加・修正: 注釈エリア ▼ -->
+                        <div class="p-5 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 text-sm font-medium rounded-r-lg">
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>体験当日は必ずチケットをご持参下さい。紛失の場合再発行は致しかねます。</li>
+                                <li>溶岩ヨガ4回、ピラティスリフォーマー2回のご参加が可能です。</li>
+                                <li>同日での体験はお受け出来ません。</li>
+                                <li>チケットの有効期限は2026年7月末まででございます。</li>
+                            </ul>
+                        </div>
+
+                        <p>この度は当館レッスンのご体験をご検討いただき、誠にありがとうございます。</p>
+                        <p>必ずご来館前に、<strong class="font-semibold">【同意書】【緊急連絡先】</strong>のご入力・送信までお済ませくださいますようお願い申し上げます。<br>ご入力内容が確認できない場合、体験をご案内できかねますので、予めご了承ください。</p>
+                        <p>すでに当フォームを送信済みで、日程や人数の変更をご希望の方は、再度ご入力と送信をお願いいたします。その際、「ご質問・備考」欄に、ご希望日程変更や人数変更の旨をご入力ください。</p>
+                        
+                        <div class="p-4 bg-blue-50 border-l-4 border-blue-400 text-blue-800 text-xs rounded-r-lg">
+                           <p class="font-bold mb-1">※ピラティスリフォーマー体験予約ご希望の方へ</p>
+                           <p>ご希望日の<strong>2日前23:59まで</strong>にお済ませください。過ぎてしまった場合は体験のご案内ができかねます。</p>
+                        </div>
+                        <p class="info-box">ご入力いただいた内容をメールにて自動送信いたします。メールアドレスをご入力ください。</p>
+                    </div>
+
+                    <form id="tanashi-trial-form" class="mt-8 space-y-8">
+                        <input type="hidden" name="formType" value="tanashi_trial_lesson">
+                        
+                        <div>
+                            <label for="trial-email" class="form-label">メールアドレス<span class="required-mark">*</span></label>
+                            <input type="email" id="trial-email" name="email" class="form-input" required>
+                        </div>
+
+                        <div class="p-4 border rounded-lg bg-gray-50">
+                            <label class="form-label">同意書<span class="required-mark">*</span></label>
+                            <p class="text-xs mb-3 text-gray-700">私は健康上の不都合がない為、JOYFIT YOGAフレスポひばりが丘にて体験に参加致します。万が一、事故及びケガ等を負った場合は、自らの責任と致します。</p>
+                            <label class="flex items-center cursor-pointer"><input type="checkbox" name="consent" value="同意します" class="mr-2 w-4 h-4" required>同意します</label>
+                            <p class="text-xs text-gray-500 mt-1">※同意いただけない場合、ご体験いただくことはできません。</p>
+                        </div>
+
+                        <div>
+                            <label class="form-label">体験希望日<span class="required-mark">*</span></label>
+                            <div class="p-4 bg-white rounded-lg border border-gray-200 text-sm space-y-3">
+                                <p class="text-center mb-2">下記レッスンプログラムをご覧いただき、ご希望の日付・レッスン開始時刻をご入力ください。</p>
+                                <a href="https://docs.google.com/presentation/d/195N1NhcN8iiJnpoL0liaquU-PZL5LSN0sPHg1X72a40/edit?usp=sharing" target="_blank" class="block w-full text-center bg-brand-teal text-white font-bold py-3 px-4 rounded-full shadow-md hover:bg-brand-teal-dark hover:shadow-lg transform hover:-translate-y-1 transition-all duration-200">
+                                    今月のレッスンプログラムはこちら
+                                </a>
+                                <div class="text-xs mt-3 bg-gray-50 p-3 rounded">
+                                    <p class="font-bold text-center mb-1">【★の数で強度が異なります】</p>
+                                    <p class="text-center">★：初心者向け ／ ★★：中級者向け ／ ★★★：上級者向け</p>
+                                    <p class="text-center mt-1 text-gray-600">溶岩浴：インストラクター不在の溶岩スタジオ内で、ゆっくりとお休みいただくお時間です。</p>
+                                </div>
+                            </div>
+                            <div class="flex flex-col sm:flex-row gap-4 mt-4">
+                                <input type="date" id="lesson-date" class="form-input flex-1" required>
+                                <select id="lesson-time" class="form-input flex-1" required>
+                                    <option value="" disabled selected>開始時間を選択</option>
+                                    <!-- JSで動的に追加されます -->
+                                </select>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">※日付と開始時間をそれぞれ選択してください。（時間は15分間隔です）<br>※予約状況により、ご希望の日程でのご案内ができかねる場合がございます。その場合は当館よりご連絡させていただきます。<br>※体験当日はレッスン開始15分前には店頭にお越しいただき、インターフォンを押してください。</p>
+                        </div>
+
+                        <div>
+                            <label class="form-label">ご参加希望人数 ※2名様まで<span class="required-mark">*</span></label>
+                            <div class="flex gap-6">
+                                <label class="flex items-center cursor-pointer"><input type="radio" name="participants" value="1名" class="mr-2 w-4 h-4" required>1名</label>
+                                <label class="flex items-center cursor-pointer"><input type="radio" name="participants" value="2名" class="mr-2 w-4 h-4">2名</label>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">※ピラティスリフォーマー・筋膜リリースヨガ・ホイールを使用するヨガをご希望の場合、2名様以上でのご案内ができかねる場合がございます。その場合は当館よりご連絡させていただきます。</p>
+                        </div>
+
+                        <div>
+                            <label class="form-label" for="visit-count">何回目のご利用ですか？<span class="required-mark">*</span></label>
+                            <select id="visit-count" name="visit_count" class="form-input" required>
+                                <option value="" disabled selected>選択してください</option>
+                                <option value="初めて">初めて</option>
+                                <option value="2回目">2回目</option>
+                                <option value="3回目">3回目</option>
+                                <option value="4回目">4回目</option>
+                                <option value="5回目">5回目</option>
+                                <option value="6回目">6回目</option>
+                            </select>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label for="trial-name" class="form-label">氏名<span class="required-mark">*</span></label>
+                                <input type="text" id="trial-name" name="name" class="form-input" required>
+                            </div>
+                            <div>
+                                <label for="trial-furigana" class="form-label">ふりがな<span class="required-mark">*</span></label>
+                                <input type="text" id="trial-furigana" name="furigana" class="form-input" required>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label for="trial-birthdate" class="form-label">生年月日<span class="required-mark">*</span></label>
+                                <input type="date" id="trial-birthdate" name="birthdate" class="form-input" required>
+                                <p class="text-xs text-gray-500 mt-1">※年号をタップすると過去の年を選択できます。</p>
+                            </div>
+                            <div>
+                                <label for="trial-age" class="form-label">ご年齢<span class="required-mark">*</span></label>
+                                <input type="number" id="trial-age" name="age" class="form-input" required readonly placeholder="自動計算されます">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="form-label">ご住所<span class="required-mark">*</span></label>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div class="sm:col-span-2">
+                                    <label for="trial-zipcode" class="text-xs text-gray-600">郵便番号 (ハイフンなし)</label>
+                                    <input type="text" id="trial-zipcode" class="form-input" placeholder="例: 1880001">
+                                </div>
+                                <div class="flex items-end">
+                                    <button type="button" id="search-address-btn" class="w-full bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-lg hover:bg-gray-300 transition-colors text-sm">住所検索</button>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <label for="trial-address1" class="text-xs text-gray-600">都道府県・市区町村・町名</label>
+                                <input type="text" id="trial-address1" class="form-input" readonly>
+                            </div>
+                            <div class="mt-4">
+                                <label for="trial-address2" class="text-xs text-gray-600">番地・建物名など</label>
+                                <input type="text" id="trial-address2" class="form-input" placeholder="例: 谷戸町2-3-7 フレスポ2F" required>
+                            </div>
+                            <input type="hidden" name="住所">
+                        </div>
+
+                        <div>
+                            <label for="trial-phone" class="form-label">電話番号<span class="required-mark">*</span></label>
+                            <input type="tel" id="trial-phone" name="phone" class="form-input" placeholder="例: 09012345678 (ハイフンなし)" required>
+                            <p class="text-xs text-gray-500 mt-1">※ハイフン（-）なしでご入力ください。</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t pt-6 mt-6">
+                            <div>
+                                <label for="trial-emergency-name" class="form-label">緊急連絡先のお名前(続柄)<span class="required-mark">*</span></label>
+                                <input type="text" id="trial-emergency-name" name="emergency_name" class="form-input" placeholder="記入例：山田花子(母)" required>
+                            </div>
+                            <div>
+                                <label for="trial-emergency-phone" class="form-label">緊急連絡先の電話番号<span class="required-mark">*</span></label>
+                                <input type="tel" id="trial-emergency-phone" name="emergency_phone" class="form-input" placeholder="例: 09012345678 (ハイフンなし)" required>
+                                <p class="text-xs text-gray-500 mt-1">※ハイフン（-）なしでご入力ください。</p>
+                            </div>
+                        </div>
+
+                        <div class="p-5 border-2 border-brand-teal rounded-xl bg-white shadow-sm">
+                            <label class="form-label text-brand-teal text-lg mb-4">下記説明をご確認ください。<span class="required-mark">*</span></label>
+                            <div class="text-sm space-y-4 text-gray-700">
+                                
+                                <div>
+                                    <p class="font-bold border-b border-gray-200 pb-1 mb-2">▪️体験時のお持ち物▪️</p>
+                                    <ul class="list-disc list-inside space-y-1 pl-1">
+                                        <li>汗をかくため、替えの下着</li>
+                                        <li>レッスン後に下着を入れるビニール袋</li>
+                                        <li>本人確認書類(免許証等、現住所が分かるもの)</li>
+                                        <li>滑り止め付き靴下(ピラティスリフォーマー体験の方は必要となります。初回のみプレゼント致します。)</li>
+                                        <li>クレジットカード(店頭にて滑り止め付き靴下を税込660円で販売しております。必要な方はご購入下さい。)</li>
+                                    </ul>
+                                </div>
+
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <p class="font-bold text-gray-800 mb-2">※下記のお持ち物は店舗にて無料でご用意しております。(ご自身のものを使用されたい方はご持参ください。)</p>
+                                    <ul class="list-disc list-inside space-y-1 pl-1 text-gray-600">
+                                        <li>飲料水500㎖（500㎖以上必要な場合はご持参ください。店内販売は行っておりません）</li>
+                                        <li>ウェア上下（動きやすい服装）</li>
+                                        <li>レンタルフェイスタオル1枚</li>
+                                    </ul>
+                                </div>
+
+                                <p class="text-xs text-red-600">※乗り物酔いしやすい方は、ピラティスリフォーマー使用時に酔ってしまう可能性がございます。ご注意の上、お申込みください。</p>
+                                
+                                <div class="pt-2">
+                                    <p class="font-bold border-b border-gray-200 pb-1 mb-2">▪️体験当日の流れ▪️</p>
+                                    <a href="https://drive.google.com/file/d/1xhW-de7ugrImJGy8r--8lR2rQ6ESgXlg/view" target="_blank" class="inline-flex items-center text-brand-teal font-bold hover:underline">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                        入館～体験～退館の流れ
+                                    </a>
+                                </div>
+                                
+                            </div>
+                            <label class="flex items-center mt-6 p-3 bg-gray-50 rounded-lg border cursor-pointer hover:bg-gray-100 transition-colors">
+                                <input type="checkbox" name="read_confirmation" value="確認しました" class="mr-3 w-5 h-5 text-brand-teal rounded border-gray-300 focus:ring-brand-teal" required>
+                                <span class="font-bold text-gray-800">上記の内容を確認し、了承しました</span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label for="trial-remarks" class="form-label">ご質問・備考</label>
+                            <textarea id="trial-remarks" name="remarks" rows="4" class="form-input" placeholder="ご不明点等ございましたらご入力ください。日程や人数変更をご希望の場合、その旨をご入力ください。"></textarea>
+                        </div>
+
+                        <div class="text-center pt-6">
+                            <button type="submit" class="w-full sm:w-auto bg-brand-teal text-white font-bold py-4 px-16 rounded-full hover:bg-brand-teal-dark hover:shadow-lg transition-all transform hover:-translate-y-1 text-lg">
+                                送信する
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </div>
     
-    body += `▼確認用リンク（スプレッドシート）\n${spreadsheetUrl}`;
-    MailApp.sendEmail(ADMIN_EMAILS.join(','), subject, body);
-  } catch (e) { console.error('通知メール失敗', e); }
-}
+    <!-- 送信結果メッセージ -->
+    <div id="response-message" class="hidden fixed top-5 right-5 text-white py-3 px-6 rounded-lg shadow-lg text-base transition-transform duration-500 transform translate-x-full z-50"></div>
 
-function sendConfirmationEmailToCustomer(params) {
-  try {
-    const recipient = params.email;
-    if (!recipient) return;
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('tanashi-trial-form');
+            const responseMessage = document.getElementById('response-message');
+            
+            // ★ GASウェブアプリのURL（送信先） ★
+            const webAppUrl = 'https://script.google.com/macros/s/AKfycbz0TnMhR3jZk16wm41W2c34tq7AzYaum3EVv0xJMb9RFnIZuOfoyPX2Kqf19Wf1aAnD/exec';
 
-    const customerName = params.name || 'お客様';
-    const subject = `【${STUDIO_NAME}】スタジオレッスン体験のご予約ありがとうございます`;
-    
-    const body = `${customerName} 様
+            // メッセージ表示関数
+            function showResponseMessage(message, isSuccess) {
+                 responseMessage.textContent = message;
+                 responseMessage.classList.remove('hidden', 'translate-x-full', 'bg-brand-teal', 'bg-red-500');
+                 responseMessage.classList.add(isSuccess ? 'bg-brand-teal' : 'bg-red-500');
+                 setTimeout(() => responseMessage.classList.remove('translate-x-full'), 10);
+                 setTimeout(() => {
+                     responseMessage.classList.add('translate-x-full');
+                     setTimeout(() => responseMessage.classList.add('hidden'), 500);
+                 }, 5000);
+            }
 
-この度は、${STUDIO_NAME} 女性会員様限定スタジオレッスン体験にお申し込みいただき、
-誠にありがとうございます。
+            // 住所検索機能
+            const searchAddressBtn = document.getElementById('search-address-btn');
+            if (searchAddressBtn) {
+                searchAddressBtn.addEventListener('click', function() {
+                    // ハイフンを自動で取り除く
+                    let zipcode = document.getElementById('trial-zipcode').value;
+                    zipcode = zipcode.replace(/-/g, '');
 
-以下の内容でご予約のリクエストを承りました。
-※満員などによりご希望に添えない場合のみ、当館より改めてご連絡させていただきます。
+                    if (!zipcode || !/^\d{7}$/.test(zipcode)) {
+                        showResponseMessage('7桁の郵便番号を入力してください。', false);
+                        return;
+                    }
 
---------------------------------------------------
-【ご予約内容】
-ご希望日時: ${params.lesson_datetime || '未入力'}
-ご参加人数: ${params.participants || '未入力'}
-ご利用回数: ${params.visit_count || '未入力'}
---------------------------------------------------
+                    // 確実に通信できるようにJSONPを使用する
+                    const script = document.createElement('script');
+                    const callbackName = 'zipcloudCallback_' + Date.now();
 
-ご予約が確定の場合は、こちらからのご連絡はいたしませんので、ご希望の日時にお越しください。
-当日は、レッスン開始の15分前までに店舗へお越しください。
+                    window[callbackName] = function(data) {
+                        document.body.removeChild(script);
+                        delete window[callbackName];
+                        if (data.status === 200 && data.results) {
+                            const result = data.results[0];
+                            const address1 = document.getElementById('trial-address1');
+                            const address2 = document.getElementById('trial-address2');
+                            
+                            address1.value = result.address1 + result.address2 + result.address3;
+                            address2.focus();
+                        } else {
+                            showResponseMessage('住所が見つかりませんでした。', false);
+                        }
+                    };
 
-【体験時のご注意】
-・体験当日は必ずチケットをご持参下さい。紛失の場合再発行は致しかねます。
-・溶岩ヨガ4回、ピラティスリフォーマー2回のご参加が可能です。
-・同日での体験はお受け出来ません。
-・チケットの有効期限は2026年7月末まででございます。
+                    script.src = `https://zipcloud.ibsnet.co.jp/api/search?zipcode=${zipcode}&callback=${callbackName}`;
+                    script.onerror = function() {
+                        document.body.removeChild(script);
+                        delete window[callbackName];
+                        showResponseMessage('通信エラーが発生しました。', false);
+                    };
+                    document.body.appendChild(script);
+                });
+            }
 
-【お持ち物】
-・汗をかくため、替えの下着
-・レッスン後に下着を入れるビニール袋
-・本人確認書類(免許証等、現住所が分かるもの)
-・滑り止め付き靴下(ピラティスリフォーマー体験の方は必要となります。初回のみプレゼント致します。)
-・クレジットカード(店頭にて滑り止め付き靴下を税込660円で販売しております。必要な方はご購入下さい。)
+            // カレンダーの日付制限と時間のプルダウン生成
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const todayString = `${yyyy}-${mm}-${dd}`;
+            
+            // 1. 生年月日（今日より未来を選べないようにする）
+            const birthdateInput = document.getElementById('trial-birthdate');
+            if (birthdateInput) {
+                birthdateInput.max = todayString;
+            }
 
-※飲料水(500ml)、ウェア上下、レンタルフェイスタオル1枚は店舗にて無料でご用意しております。
+            // 2. 体験希望日と時間の制御
+            const lessonDateInput = document.getElementById('lesson-date');
+            const lessonTimeSelect = document.getElementById('lesson-time');
+            
+            if (lessonDateInput && lessonTimeSelect) {
+                // 過去の日付を選べないようにする
+                lessonDateInput.min = todayString;
 
-スタッフ一同、心よりお待ちしております。
+                // 15分刻みの時間選択肢を生成 (08:00 〜 22:00)
+                for (let h = 8; h <= 22; h++) {
+                    for (let m = 0; m < 60; m += 15) {
+                        if (h === 22 && m > 0) break; // 22:00まで
+                        const hourStr = String(h).padStart(2, '0');
+                        const minStr = String(m).padStart(2, '0');
+                        const timeStr = `${hourStr}:${minStr}`;
+                        const option = document.createElement('option');
+                        option.value = timeStr;
+                        option.textContent = timeStr;
+                        lessonTimeSelect.appendChild(option);
+                    }
+                }
 
---------------------------------------------------
-${STUDIO_NAME}
-※本メールは送信専用です。お問い合わせは店舗までお願いいたします。
---------------------------------------------------`;
+                // 日付が変更された時、今日なら過去の時間を無効化する関数
+                const updateTimeOptions = () => {
+                    const selectedDate = lessonDateInput.value;
+                    const isToday = (selectedDate === todayString);
+                    const currentHour = now.getHours();
+                    const currentMinute = now.getMinutes();
 
-    MailApp.sendEmail(recipient, subject, body, { name: STUDIO_NAME, replyTo: STORE_EMAIL });
-  } catch (e) { console.error('完了メール失敗', e); }
-}
+                    Array.from(lessonTimeSelect.options).forEach(option => {
+                        if (option.value === "") return; // 初期選択肢はスキップ
+                        
+                        if (isToday) {
+                            const [optHour, optMin] = option.value.split(':').map(Number);
+                            if (optHour < currentHour || (optHour === currentHour && optMin <= currentMinute)) {
+                                option.disabled = true;
+                                if (option.selected) {
+                                    lessonTimeSelect.value = ""; // 選択中ならリセット
+                                }
+                            } else {
+                                option.disabled = false;
+                            }
+                        } else {
+                            option.disabled = false;
+                        }
+                    });
+                };
 
-/**
- * 担当者入力時のタイムスタンプ自動入力（必要に応じて使用）
- */
-function onEdit(e) {
-  if (!e || !e.range) return;
-  const sheet = e.source.getActiveSheet();
-  const range = e.range;
-  const colIndex = range.getColumn();
-  const rowIndex = range.getRow();
-  
-  if (rowIndex === 1) return;
+                lessonDateInput.addEventListener('change', updateTimeOptions);
+                // 初期化時にも一度実行
+                updateTimeOptions();
+            }
 
-  const headerValue = sheet.getRange(1, colIndex).getValue();
+            // 年齢自動計算機能
+            if (birthdateInput) {
+                const ageInput = document.getElementById('trial-age');
+                birthdateInput.addEventListener('change', function() {
+                    if (!this.value) {
+                        ageInput.value = '';
+                        return;
+                    }
+                    const birthDate = new Date(this.value);
+                    const today = new Date();
+                    let age = today.getFullYear() - birthDate.getFullYear();
+                    const m = today.getMonth() - birthDate.getMonth();
+                    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                        age--;
+                    }
+                    ageInput.value = age >= 0 ? age : '';
+                });
+            }
 
-  if (headerValue === '台帳記入' || headerValue === '対応状況') {
-    if (e.value) {
-      const now = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm");
-      range.offset(0, 1).setValue(now);
-    } else {
-      range.offset(0, 1).clearContent();
-    }
-  }
-}
+            // フォーム送信処理
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                let formData = new FormData(form);
+
+                // ▼▼▼ 修正：住所がスプレッドシートに入らない問題の解決 ▼▼▼
+                // FormDataは生成時のDOMの状態を読み取るため、後からDOMを変更しても反映されません。
+                // そのため、formData.set() を使って明示的にデータを書き込みます。
+                const zipcode = form.querySelector('#trial-zipcode').value;
+                const address1 = form.querySelector('#trial-address1').value;
+                const address2 = form.querySelector('#trial-address2').value;
+                formData.set('住所', `〒${zipcode} ${address1}${address2}`);
+                
+                // 日付と時間を結合して lesson_datetime として送信
+                const dateVal = lessonDateInput ? lessonDateInput.value : '';
+                const timeVal = lessonTimeSelect ? lessonTimeSelect.value : '';
+                if (dateVal && timeVal) {
+                    formData.set('lesson_datetime', `${dateVal} ${timeVal}`);
+                }
+                // ▲▲▲ 修正ここまで ▲▲▲
+
+                const submitButton = form.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.textContent;
+                
+                submitButton.disabled = true;
+                submitButton.textContent = '送信中...';
+
+                fetch(webAppUrl, {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => response.text())
+                .then(text => {
+                    let data;
+                    try {
+                        data = JSON.parse(text);
+                    } catch (e) {
+                        console.error("サーバーからの応答が不正です:", text);
+                        throw new Error('サーバーから予期しない応答がありました。');
+                    }
+
+                    if (data.result === 'success') {
+                        form.reset();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        showResponseMessage('送信が完了しました。ご登録のメールアドレスをご確認ください。', true);
+                    } else {
+                        throw new Error(data.message || 'システムエラーが発生しました。');
+                    }
+                })
+                .catch(error => {
+                    console.error('送信エラー:', error);
+                    showResponseMessage(`送信に失敗しました: ${error.message}`, false);
+                })
+                .finally(() => {
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalButtonText;
+                });
+            });
+        });
+    </script>
+</body>
+</html>
