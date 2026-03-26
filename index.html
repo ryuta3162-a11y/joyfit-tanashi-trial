@@ -1,0 +1,219 @@
+/**
+ * ===============================================================
+ * 設定項目 (田無店のスタッフ様が編集する箇所です)
+ * ===============================================================
+ */
+
+// 1. 回答を記録するスプレッドシートのIDを設定してください
+// ※URLの「/d/」から「/edit」までの間の英数字です
+const SPREADSHEET_ID = '1dJu7TksEe_QSv-bQ3AnTFxi9CjFt9sy9jY5JjX00UOg'; 
+
+// 2. 申請があった場合に通知を受け取りたいメールアドレスを設定してください
+const ADMIN_EMAILS = [
+  'r-kusaka@okamoto-group.co.jp',
+];
+
+// 3. 店舗の公式メールアドレス（お客様への自動返信メールの送信元・返信先となります）
+const STORE_EMAIL = 'tanashi@example.com'; // ★実際の田無店のアドレスに変更してください
+
+// 4. お客様への自動返信メールの送信者名として表示される店舗名
+const STUDIO_NAME = 'JOYFIT24田無店';
+
+// 5. シート名の定義（スプレッドシートのタブ名と【完全に一致】させてください）
+// ※「シート1」の場合はそのままで大丈夫です
+const SHEET_NAME_TRIAL = 'シート1'; 
+
+
+/**
+ * ===============================================================
+ * 以下はシステムの動作に必要なため、基本的に編集しないでください
+ * ===============================================================
+ */
+
+/**
+ * doPost: メイン処理
+ * あらゆるエラーをキャッチして、必ずJSONを返すように設計
+ */
+function doPost(e) {
+  try {
+    // 応答速度向上のため、ロックを取得（同時実行による衝突防止）
+    const lock = LockService.getScriptLock();
+    // 5秒待ってロック取れなければエラーにする
+    if (!lock.tryLock(5000)) {
+      return createErrorResponse('サーバーが混み合っています。もう一度お試しください。');
+    }
+
+    if (!SPREADSHEET_ID) throw new Error('スプレッドシートID未設定');
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const params = e.parameter;
+    
+    let response;
+
+    // --- フォーム送信の処理 ---
+    if (params.formType === 'tanashi_trial_lesson') {
+       response = handleTrialSubmit(spreadsheet, params);
+    } else {
+       response = createErrorResponse('不明なフォームタイプです。');
+    }
+
+    // 処理が終わったらロック解除
+    lock.releaseLock();
+    return response;
+
+  } catch (error) {
+    console.error('Fatal Error in doPost:', error);
+    return createErrorResponse('システムエラーが発生しました: ' + String(error.message));
+  }
+}
+
+/**
+ * 体験フォーム送信のハンドリング
+ */
+function handleTrialSubmit(spreadsheet, params) {
+  let sheet = spreadsheet.getSheetByName(SHEET_NAME_TRIAL);
+  if (!sheet) {
+    // シートが見つからない場合は1番左のシートを使う
+    sheet = spreadsheet.getSheets()[0];
+  }
+  
+  // スプレッドシートに記録する順番にデータを配列化
+  // ※スプレッドシートの1行目の見出しの順番と合わせています
+  const rowData = [
+    new Date(), // 1. タイムスタンプ
+    params.email || '', // 2. メールアドレス
+    params.lesson_datetime || '', // 3. 体験希望日
+    params.participants || '', // 4. 参加人数
+    params.visit_count || '', // 5. 何回目の利用か
+    params.name || '', // 6. 氏名
+    params.furigana || '', // 7. ふりがな
+    params.birthdate || '', // 8. 生年月日
+    params.age || '', // 9. 年齢
+    params.住所 || '', // 10. 住所
+    params.phone || '', // 11. 電話番号
+    params.emergency_name || '', // 12. 緊急連絡先_氏名
+    params.emergency_phone || '', // 13. 緊急連絡先_電話番号
+    params.remarks || '', // 14. ご質問・備考
+    params.consent || '', // 15. 同意確認
+    params.read_confirmation || '' // 16. 注意事項確認
+  ];
+
+  // スプレッドシートの最終行に追加
+  sheet.appendRow(rowData);
+
+  // 通知メール・自動返信メールの送信
+  try {
+    const adminInfo = `氏名: ${params.name}\n希望日: ${params.lesson_datetime}\n利用回数: ${params.visit_count}\n人数: ${params.participants}`;
+    sendNotificationEmailToStaff('女性会員様限定スタジオレッスン体験', spreadsheet.getUrl(), adminInfo);
+    sendConfirmationEmailToCustomer(params);
+  } catch(e) {
+    console.error('メール送信失敗:', e);
+  }
+
+  return createSuccessResponse({ message: '送信完了' });
+}
+
+// レスポンス生成ヘルパー
+function createSuccessResponse(data) {
+  const output = { result: 'success', ...data };
+  return ContentService.createTextOutput(JSON.stringify(output)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function createErrorResponse(message) {
+  return ContentService.createTextOutput(JSON.stringify({
+    result: 'error',
+    message: message
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+// --- メール送信関連 ---
+
+function sendNotificationEmailToStaff(formName, spreadsheetUrl, additionalInfo = '') {
+  if (ADMIN_EMAILS.length === 0) return;
+  try {
+    const subject = `【${STUDIO_NAME}】${formName}の申込が来ました`;
+    let body = `${formName}に新しい申し込みがありました。\n\n`;
+    
+    if (additionalInfo) {
+      body += additionalInfo + '\n\n';
+    }
+    
+    body += `▼確認用リンク（スプレッドシート）\n${spreadsheetUrl}`;
+    MailApp.sendEmail(ADMIN_EMAILS.join(','), subject, body);
+  } catch (e) { console.error('通知メール失敗', e); }
+}
+
+function sendConfirmationEmailToCustomer(params) {
+  try {
+    const recipient = params.email;
+    if (!recipient) return;
+
+    const customerName = params.name || 'お客様';
+    const subject = `【${STUDIO_NAME}】スタジオレッスン体験のご予約ありがとうございます`;
+    
+    const body = `${customerName} 様
+
+この度は、${STUDIO_NAME} 女性会員様限定スタジオレッスン体験にお申し込みいただき、
+誠にありがとうございます。
+
+以下の内容でご予約のリクエストを承りました。
+※満員などによりご希望に添えない場合のみ、当館より改めてご連絡させていただきます。
+
+--------------------------------------------------
+【ご予約内容】
+ご希望日時: ${params.lesson_datetime || '未入力'}
+ご参加人数: ${params.participants || '未入力'}
+ご利用回数: ${params.visit_count || '未入力'}
+--------------------------------------------------
+
+ご予約が確定の場合は、こちらからのご連絡はいたしませんので、ご希望の日時にお越しください。
+当日は、レッスン開始の15分前までに店舗へお越しください。
+
+【体験時のご注意】
+・体験当日は必ずチケットをご持参下さい。紛失の場合再発行は致しかねます。
+・溶岩ヨガ4回、ピラティスリフォーマー2回のご参加が可能です。
+・同日での体験はお受け出来ません。
+・チケットの有効期限は2026年7月末まででございます。
+
+【お持ち物】
+・汗をかくため、替えの下着
+・レッスン後に下着を入れるビニール袋
+・本人確認書類(免許証等、現住所が分かるもの)
+・滑り止め付き靴下(ピラティスリフォーマー体験の方は必要となります。初回のみプレゼント致します。)
+・クレジットカード(店頭にて滑り止め付き靴下を税込660円で販売しております。必要な方はご購入下さい。)
+
+※飲料水(500ml)、ウェア上下、レンタルフェイスタオル1枚は店舗にて無料でご用意しております。
+
+スタッフ一同、心よりお待ちしております。
+
+--------------------------------------------------
+${STUDIO_NAME}
+※本メールは送信専用です。お問い合わせは店舗までお願いいたします。
+--------------------------------------------------`;
+
+    MailApp.sendEmail(recipient, subject, body, { name: STUDIO_NAME, replyTo: STORE_EMAIL });
+  } catch (e) { console.error('完了メール失敗', e); }
+}
+
+/**
+ * 担当者入力時のタイムスタンプ自動入力（必要に応じて使用）
+ */
+function onEdit(e) {
+  if (!e || !e.range) return;
+  const sheet = e.source.getActiveSheet();
+  const range = e.range;
+  const colIndex = range.getColumn();
+  const rowIndex = range.getRow();
+  
+  if (rowIndex === 1) return;
+
+  const headerValue = sheet.getRange(1, colIndex).getValue();
+
+  if (headerValue === '台帳記入' || headerValue === '対応状況') {
+    if (e.value) {
+      const now = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm");
+      range.offset(0, 1).setValue(now);
+    } else {
+      range.offset(0, 1).clearContent();
+    }
+  }
+}
