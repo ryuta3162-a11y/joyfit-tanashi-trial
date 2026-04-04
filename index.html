@@ -86,12 +86,11 @@
                         </div>
 
                         <p>この度は当館レッスンのご体験をご検討いただき、誠にありがとうございます。</p>
-                        <p>必ずご来館前に、<strong class="font-semibold">【同意書】【緊急連絡先】</strong>のご入力・送信までお済ませくださいますようお願い申し上げます。<br>ご入力内容が確認できない場合、体験をご案内できかねますので、予めご了承ください。</p>
-                        <p>すでに当フォームを送信済みで、日程や人数の変更をご希望の方は、再度ご入力と送信をお願いいたします。その際、「ご質問・備考」欄に、ご希望日程変更や人数変更の旨をご入力ください。</p>
+                        <p>必ずご来館前に、<strong class="font-semibold">【同意書】</strong>のご入力・送信までお済ませくださいますようお願い申し上げます。<br>ご入力内容が確認できない場合、体験をご案内できかねますので、予めご了承ください。</p>
+                        <p>すでに当フォームを送信済みで、日程の変更をご希望の方は、再度ご入力と送信をお願いいたします。その際、「ご質問・備考」欄に、ご希望日程変更の旨をご入力ください。</p>
                         
                         <div class="p-4 bg-blue-50 border-l-4 border-blue-400 text-blue-800 text-xs rounded-r-lg">
-                           <p class="font-bold mb-1">※ピラティスリフォーマー体験予約ご希望の方へ</p>
-                           <p>ご希望日の<strong>2日前23:59まで</strong>にお済ませください。過ぎてしまった場合は体験のご案内ができかねます。</p>
+                           <p>※当日はレッスン開始15分前までにはお越しいただき、JOYFITアプリでご入館ください。</p>
                         </div>
                         <p class="info-box">ご入力いただいた内容をメールにて自動送信いたします。メールアドレスをご入力ください。</p>
                     </div>
@@ -131,16 +130,7 @@
                                     <!-- JSで動的に追加されます -->
                                 </select>
                             </div>
-                            <p class="text-xs text-gray-500 mt-2">※日付と開始時間をそれぞれ選択してください。（時間は15分間隔です）<br>※予約状況により、ご希望の日程でのご案内ができかねる場合がございます。その場合は当館よりご連絡させていただきます。<br>※体験当日はレッスン開始15分前には店頭にお越しいただき、インターフォンを押してください。</p>
-                        </div>
-
-                        <div>
-                            <label class="form-label">ご参加希望人数 ※2名様まで<span class="required-mark">*</span></label>
-                            <div class="flex gap-6">
-                                <label class="flex items-center cursor-pointer"><input type="radio" name="participants" value="1名" class="mr-2 w-4 h-4" required>1名</label>
-                                <label class="flex items-center cursor-pointer"><input type="radio" name="participants" value="2名" class="mr-2 w-4 h-4">2名</label>
-                            </div>
-                            <p class="text-xs text-gray-500 mt-2">※ピラティスリフォーマー・筋膜リリースヨガ・ホイールを使用するヨガをご希望の場合、2名様以上でのご案内ができかねる場合がございます。その場合は当館よりご連絡させていただきます。</p>
+                            <p class="text-xs text-gray-500 mt-2">※日付と開始時間をそれぞれ選択してください。（時間は15分間隔です）<br>※予約状況により、ご希望の日程でのご案内ができかねる場合がございます。その場合は当館よりご連絡させていただきます。</p>
                         </div>
 
                         <div>
@@ -167,56 +157,10 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <div>
-                                <label for="trial-birthdate" class="form-label">生年月日<span class="required-mark">*</span></label>
-                                <input type="date" id="trial-birthdate" name="birthdate" class="form-input" required>
-                                <p class="text-xs text-gray-500 mt-1">※年号をタップすると過去の年を選択できます。</p>
-                            </div>
-                            <div>
-                                <label for="trial-age" class="form-label">ご年齢<span class="required-mark">*</span></label>
-                                <input type="number" id="trial-age" name="age" class="form-input" required readonly placeholder="自動計算されます">
-                            </div>
-                        </div>
-
                         <div>
-                            <label class="form-label">ご住所<span class="required-mark">*</span></label>
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div class="sm:col-span-2">
-                                    <label for="trial-zipcode" class="text-xs text-gray-600">郵便番号 (ハイフンなし)</label>
-                                    <input type="text" id="trial-zipcode" class="form-input" placeholder="例: 1880001">
-                                </div>
-                                <div class="flex items-end">
-                                    <button type="button" id="search-address-btn" class="w-full bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-lg hover:bg-gray-300 transition-colors text-sm">住所検索</button>
-                                </div>
-                            </div>
-                            <div class="mt-4">
-                                <label for="trial-address1" class="text-xs text-gray-600">都道府県・市区町村・町名</label>
-                                <input type="text" id="trial-address1" class="form-input" readonly>
-                            </div>
-                            <div class="mt-4">
-                                <label for="trial-address2" class="text-xs text-gray-600">番地・建物名など</label>
-                                <input type="text" id="trial-address2" class="form-input" placeholder="例: 谷戸町2-3-7 フレスポ2F" required>
-                            </div>
-                            <input type="hidden" name="住所">
-                        </div>
-
-                        <div>
-                            <label for="trial-phone" class="form-label">電話番号<span class="required-mark">*</span></label>
-                            <input type="tel" id="trial-phone" name="phone" class="form-input" placeholder="例: 09012345678 (ハイフンなし)" required>
-                            <p class="text-xs text-gray-500 mt-1">※ハイフン（-）なしでご入力ください。</p>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t pt-6 mt-6">
-                            <div>
-                                <label for="trial-emergency-name" class="form-label">緊急連絡先のお名前(続柄)<span class="required-mark">*</span></label>
-                                <input type="text" id="trial-emergency-name" name="emergency_name" class="form-input" placeholder="記入例：山田花子(母)" required>
-                            </div>
-                            <div>
-                                <label for="trial-emergency-phone" class="form-label">緊急連絡先の電話番号<span class="required-mark">*</span></label>
-                                <input type="tel" id="trial-emergency-phone" name="emergency_phone" class="form-input" placeholder="例: 09012345678 (ハイフンなし)" required>
-                                <p class="text-xs text-gray-500 mt-1">※ハイフン（-）なしでご入力ください。</p>
-                            </div>
+                            <label for="trial-member-number" class="form-label">会員番号<span class="required-mark">*</span></label>
+                            <input type="text" id="trial-member-number" name="member_number" class="form-input" inputmode="numeric" autocomplete="off" placeholder="例: 1234567890" required>
+                            <p class="text-xs text-gray-500 mt-1">※会員証またはJOYFITアプリでご確認いただけます。</p>
                         </div>
 
                         <div class="p-5 border-2 border-brand-teal rounded-xl bg-white shadow-sm">
@@ -237,9 +181,10 @@
                                 <div class="bg-gray-50 p-4 rounded-lg">
                                     <p class="font-bold text-gray-800 mb-2">※下記のお持ち物は店舗にて無料でご用意しております。(ご自身のものを使用されたい方はご持参ください。)</p>
                                     <ul class="list-disc list-inside space-y-1 pl-1 text-gray-600">
-                                        <li>飲料水500㎖（500㎖以上必要な場合はご持参ください。店内販売は行っておりません）</li>
+                                        <li>飲料水500ml（500ml以上必要な場合はご持参ください。店内販売は行っておりません）</li>
                                         <li>ウェア上下（動きやすい服装）</li>
                                         <li>レンタルフェイスタオル1枚</li>
+                                        <li>レンタルバスタオル1枚</li>
                                     </ul>
                                 </div>
 
@@ -247,7 +192,7 @@
                                 
                                 <div class="pt-2">
                                     <p class="font-bold border-b border-gray-200 pb-1 mb-2">▪️体験当日の流れ▪️</p>
-                                    <a href="https://drive.google.com/file/d/1xhW-de7ugrImJGy8r--8lR2rQ6ESgXlg/view" target="_blank" class="inline-flex items-center text-brand-teal font-bold hover:underline">
+                                    <a href="https://drive.google.com/file/d/1nofq1ZpmlttBkkqhO3zWea9ikneRLxb_/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="inline-flex items-center text-brand-teal font-bold hover:underline">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                         </svg>
@@ -264,7 +209,7 @@
 
                         <div>
                             <label for="trial-remarks" class="form-label">ご質問・備考</label>
-                            <textarea id="trial-remarks" name="remarks" rows="4" class="form-input" placeholder="ご不明点等ございましたらご入力ください。日程や人数変更をご希望の場合、その旨をご入力ください。"></textarea>
+                            <textarea id="trial-remarks" name="remarks" rows="4" class="form-input" placeholder="ご不明点等ございましたらご入力ください。日程変更をご希望の場合、その旨をご入力ください。"></textarea>
                         </div>
 
                         <div class="text-center pt-6">
@@ -301,62 +246,14 @@
                  }, 5000);
             }
 
-            // 住所検索機能
-            const searchAddressBtn = document.getElementById('search-address-btn');
-            if (searchAddressBtn) {
-                searchAddressBtn.addEventListener('click', function() {
-                    // ハイフンを自動で取り除く
-                    let zipcode = document.getElementById('trial-zipcode').value;
-                    zipcode = zipcode.replace(/-/g, '');
-
-                    if (!zipcode || !/^\d{7}$/.test(zipcode)) {
-                        showResponseMessage('7桁の郵便番号を入力してください。', false);
-                        return;
-                    }
-
-                    // 確実に通信できるようにJSONPを使用する
-                    const script = document.createElement('script');
-                    const callbackName = 'zipcloudCallback_' + Date.now();
-
-                    window[callbackName] = function(data) {
-                        document.body.removeChild(script);
-                        delete window[callbackName];
-                        if (data.status === 200 && data.results) {
-                            const result = data.results[0];
-                            const address1 = document.getElementById('trial-address1');
-                            const address2 = document.getElementById('trial-address2');
-                            
-                            address1.value = result.address1 + result.address2 + result.address3;
-                            address2.focus();
-                        } else {
-                            showResponseMessage('住所が見つかりませんでした。', false);
-                        }
-                    };
-
-                    script.src = `https://zipcloud.ibsnet.co.jp/api/search?zipcode=${zipcode}&callback=${callbackName}`;
-                    script.onerror = function() {
-                        document.body.removeChild(script);
-                        delete window[callbackName];
-                        showResponseMessage('通信エラーが発生しました。', false);
-                    };
-                    document.body.appendChild(script);
-                });
-            }
-
             // カレンダーの日付制限と時間のプルダウン生成
             const now = new Date();
             const yyyy = now.getFullYear();
             const mm = String(now.getMonth() + 1).padStart(2, '0');
             const dd = String(now.getDate()).padStart(2, '0');
             const todayString = `${yyyy}-${mm}-${dd}`;
-            
-            // 1. 生年月日（今日より未来を選べないようにする）
-            const birthdateInput = document.getElementById('trial-birthdate');
-            if (birthdateInput) {
-                birthdateInput.max = todayString;
-            }
 
-            // 2. 体験希望日と時間の制御
+            // 体験希望日と時間の制御
             const lessonDateInput = document.getElementById('lesson-date');
             const lessonTimeSelect = document.getElementById('lesson-time');
             
@@ -409,45 +306,16 @@
                 updateTimeOptions();
             }
 
-            // 年齢自動計算機能
-            if (birthdateInput) {
-                const ageInput = document.getElementById('trial-age');
-                birthdateInput.addEventListener('change', function() {
-                    if (!this.value) {
-                        ageInput.value = '';
-                        return;
-                    }
-                    const birthDate = new Date(this.value);
-                    const today = new Date();
-                    let age = today.getFullYear() - birthDate.getFullYear();
-                    const m = today.getMonth() - birthDate.getMonth();
-                    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                        age--;
-                    }
-                    ageInput.value = age >= 0 ? age : '';
-                });
-            }
-
             // フォーム送信処理
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
                 let formData = new FormData(form);
 
-                // ▼▼▼ 修正：住所がスプレッドシートに入らない問題の解決 ▼▼▼
-                // FormDataは生成時のDOMの状態を読み取るため、後からDOMを変更しても反映されません。
-                // そのため、formData.set() を使って明示的にデータを書き込みます。
-                const zipcode = form.querySelector('#trial-zipcode').value;
-                const address1 = form.querySelector('#trial-address1').value;
-                const address2 = form.querySelector('#trial-address2').value;
-                formData.set('住所', `〒${zipcode} ${address1}${address2}`);
-                
-                // 日付と時間を結合して lesson_datetime として送信
                 const dateVal = lessonDateInput ? lessonDateInput.value : '';
                 const timeVal = lessonTimeSelect ? lessonTimeSelect.value : '';
                 if (dateVal && timeVal) {
                     formData.set('lesson_datetime', `${dateVal} ${timeVal}`);
                 }
-                // ▲▲▲ 修正ここまで ▲▲▲
 
                 const submitButton = form.querySelector('button[type="submit"]');
                 const originalButtonText = submitButton.textContent;
