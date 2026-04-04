@@ -134,17 +134,29 @@
                             <p class="text-xs text-gray-500 mt-2">※日付と開始時間をそれぞれ選択してください。（時間は15分間隔です）<br>※予約状況により、ご希望の日程でのご案内ができかねる場合がございます。その場合は当館よりご連絡させていただきます。</p>
                         </div>
 
-                        <div>
-                            <label class="form-label" for="visit-count">何回目のご利用ですか？<span class="required-mark">*</span></label>
-                            <select id="visit-count" name="visit_count" class="form-input" required>
-                                <option value="" disabled selected>選択してください</option>
-                                <option value="初めて">初めて</option>
-                                <option value="2回目">2回目</option>
-                                <option value="3回目">3回目</option>
-                                <option value="4回目">4回目</option>
-                                <option value="5回目">5回目</option>
-                                <option value="6回目">6回目</option>
-                            </select>
+                        <div class="space-y-6">
+                            <p class="text-xs text-gray-600 -mb-2">チケットのルール（溶岩ヨガ4回・ピラティスリフォーマー2回まで）にあわせ、<strong>それぞれのプログラムで「今回が何回目のご利用か」</strong>をお選びください。</p>
+                            <div>
+                                <label class="form-label" for="visit-lava-yoga">溶岩ヨガのご利用<span class="required-mark">*</span></label>
+                                <p class="text-xs text-gray-500 mb-2">今回のレッスンが溶岩ヨガとして、何回目のご利用になりますか。（最大4回まで）</p>
+                                <select id="visit-lava-yoga" name="visit_lava_yoga" class="form-input" required>
+                                    <option value="" disabled selected>選択してください</option>
+                                    <option value="初めて">初めて（1回目）</option>
+                                    <option value="2回目">2回目</option>
+                                    <option value="3回目">3回目</option>
+                                    <option value="4回目">4回目</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label" for="visit-pilates-reformer">ピラティスリフォーマーのご利用<span class="required-mark">*</span></label>
+                                <p class="text-xs text-gray-500 mb-2">今回のレッスンがピラティスリフォーマーとして、何回目のご利用になりますか。（最大2回まで／該当しない場合は下記をお選びください）</p>
+                                <select id="visit-pilates-reformer" name="visit_pilates_reformer" class="form-input" required>
+                                    <option value="" disabled selected>選択してください</option>
+                                    <option value="初めて">初めて（1回目）</option>
+                                    <option value="2回目">2回目</option>
+                                    <option value="今回は利用しない">今回は利用しない（溶岩ヨガ等のみの予約）</option>
+                                </select>
+                            </div>
                         </div>
                         
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
