@@ -118,10 +118,30 @@
                                 <a href="https://docs.google.com/presentation/d/195N1NhcN8iiJnpoL0liaquU-PZL5LSN0sPHg1X72a40/edit?usp=sharing" target="_blank" class="block w-full text-center bg-brand-teal text-white font-bold py-3 px-4 rounded-full shadow-md hover:bg-brand-teal-dark hover:shadow-lg transform hover:-translate-y-1 transition-all duration-200">
                                     今月のレッスンプログラムはこちら
                                 </a>
-                                <div class="text-xs mt-3 bg-gray-50 p-3 rounded">
-                                    <p class="font-bold text-center mb-1">【★の数で強度が異なります】</p>
-                                    <p class="text-center">★：初心者向け ／ ★★：中級者向け ／ ★★★：上級者向け</p>
-                                    <p class="text-center mt-1 text-gray-600">溶岩浴：インストラクター不在の溶岩スタジオ内で、ゆっくりとお休みいただくお時間です。</p>
+                                <div class="text-xs mt-3 bg-gray-50 p-3 rounded space-y-3">
+                                    <div>
+                                        <p class="font-bold text-center mb-1">【★の数で強度が異なります】</p>
+                                        <p class="text-center">★：初心者向け ／ ★★：中級者向け ／ ★★★：上級者向け</p>
+                                    </div>
+                                    <div class="border-t border-gray-200 pt-3 text-left">
+                                        <p class="font-bold text-gray-800 mb-2 text-center sm:text-left">【プログラム表の色の目安】</p>
+                                        <p class="text-gray-600 mb-2 leading-relaxed">ご予約のレッスンが表のどの色に該当するかで、下の「今回のご利用（チケット）」で選ぶ項目（ヨガ／ピラティス）が変わります。</p>
+                                        <ul class="space-y-2 text-gray-700 leading-relaxed">
+                                            <li class="flex gap-2 items-start">
+                                                <span class="inline-block w-3 h-3 rounded-sm bg-green-600 shrink-0 mt-0.5" aria-hidden="true" title="緑"></span>
+                                                <span><strong class="text-green-800">緑色</strong>…<strong>ピラティスリフォーマー</strong>のレッスンです。チケットは「1回目／2回目ピラティス」からお選びください。</span>
+                                            </li>
+                                            <li class="flex gap-2 items-start">
+                                                <span class="inline-block w-3 h-3 rounded-sm bg-slate-400 shrink-0 mt-0.5" aria-hidden="true"></span>
+                                                <span><strong>緑以外</strong>のレッスン…基本的に<strong>溶岩ヨガ枠</strong>です。チケットは「1〜4回目ヨガ」からお選びください。</span>
+                                            </li>
+                                            <li class="flex gap-2 items-start">
+                                                <span class="inline-block w-3 h-3 rounded-sm bg-amber-400 shrink-0 mt-0.5 border border-amber-500/30" aria-hidden="true" title="黄"></span>
+                                                <span><strong class="text-amber-800">黄色（パーソナル）</strong>…ヨガ会員様向けの内容のため、<strong>本フォーム（女性会員様限定スタジオレッスン体験）からの予約はできません</strong>。お選びいただかないようお願いいたします。</span>
+                                            </li>
+                                        </ul>
+                                        <p class="text-gray-600 mt-2 leading-relaxed border-t border-gray-200 pt-2"><strong>溶岩浴</strong>：インストラクターは不在ですが、<strong>本フォームからのご予約は可能</strong>です。チケットは溶岩ヨガ枠の「ヨガ」の回数からお選びください。</p>
+                                    </div>
                                 </div>
                             </div>
                             <div class="flex flex-col sm:flex-row gap-4 mt-4">
@@ -136,7 +156,7 @@
 
                         <div>
                             <label for="visit-selection" class="form-label">今回のご利用（チケット）<span class="required-mark">*</span></label>
-                            <p class="text-xs text-gray-600 mb-2"><strong class="text-brand-teal">1回のレッスン＝1回のお申込み</strong>です。今回のレッスンが、下記6種類のどれにあたるか<strong>1つだけ</strong>お選びください（ヨガのみの方も・ピラティスのみの方も、ここから選べます）。</p>
+                            <p class="text-xs text-gray-600 mb-2"><strong class="text-brand-teal">1回のレッスン＝1回のお申込み</strong>です。上の「プログラム表の色の目安」にあわせ、今回のレッスンに対応する<strong>6種類のうち1つだけ</strong>をお選びください。</p>
                             <select id="visit-selection" name="visit_selection" class="form-input" required>
                                 <option value="" disabled selected>▼ タップして選択</option>
                                 <optgroup label="ヨガ（溶岩ヨガ枠・最大4回まで）">
